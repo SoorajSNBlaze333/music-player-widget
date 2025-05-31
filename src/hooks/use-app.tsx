@@ -5,6 +5,13 @@ import {
   type PropsWithChildren,
 } from "react";
 
+export type Song = {
+  title: string;
+  duration: number;
+  album: string;
+  albumArt?: string;
+};
+
 type MusicState = {
   isPlaying: boolean;
   songs: string[];
@@ -85,6 +92,7 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => {
   const ctx = useContext(AppContext);
 

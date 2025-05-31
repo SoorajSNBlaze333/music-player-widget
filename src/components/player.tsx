@@ -1,11 +1,14 @@
-import { ForwardIcon } from "@heroicons/react/24/solid";
-import { BackwardIcon } from "@heroicons/react/24/solid";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
 import { useApp } from "../hooks/use-app";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
-import { PauseIcon, PlayIcon } from "@phosphor-icons/react";
+import {
+  FastForwardIcon,
+  PauseIcon,
+  PlayIcon,
+  RewindIcon,
+} from "@phosphor-icons/react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -42,9 +45,9 @@ export const Player = () => {
       {!minimized ? (
         <motion.section
           key="widget"
-          initial={{ width: 600, height: 150 }}
+          initial={{ width: 500, height: 120 }}
           animate={{ width: 400, height: 650 }}
-          exit={{ width: 600, height: 150 }}
+          exit={{ width: 500, height: 120 }}
           transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
           className="relative rounded-lg overflow-hidden border-[1px] border-slate-300 h-[650px] w-[400px] flex flex-col justify-start items-center"
         >
@@ -86,7 +89,7 @@ export const Player = () => {
           </div>
 
           <motion.section
-            className="w-full h-[425px] overflow-scroll flex flex-col justify-start items-center"
+            className="w-full h-[500px] bg-white overflow-scroll flex flex-col justify-start items-center"
             ref={sectionRef}
           >
             {songs.map((song, index) => (
@@ -113,10 +116,10 @@ export const Player = () => {
         <motion.section
           key="widget"
           initial={{ width: 400, height: 650 }}
-          animate={{ width: 600, height: 150 }}
+          animate={{ width: 500, height: 120 }}
           exit={{ width: 400, height: 650 }}
           transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-          className="rounded-xl overflow-hidden relative flex justify-center items-center h-[150px] w-[600px]"
+          className="rounded-xl overflow-hidden relative flex justify-center items-center h-[120px] w-[500px]"
         >
           <div className="h-full relative flex flex-col justify-center items-center w-full bg-[url(/background.jpg)] bg-center bg-cover">
             <div className="h-full relative w-full flex flex-col p-6 px-8 justify-center items-center gap-4 bg-gradient-to-r from-black via-transparent to-black backdrop-blur-[2px]">
@@ -136,6 +139,7 @@ export const Player = () => {
               </AnimatePresence>
               <section className="w-full h-full flex justify-between items-center gap-4">
                 <div className="flex flex-col justify-center items-start">
+                  <p className="text-xs text-gray-400">Now Playing</p>
                   <AnimatePresence custom={currentSongIndex} mode="wait">
                     <motion.div
                       custom={currentSongIndex}
@@ -150,14 +154,13 @@ export const Player = () => {
                         <motion.p
                           key={`${char}-${index}`}
                           variants={item}
-                          className="text-white font-semibold text-3xl text-ellipsis"
+                          className="text-white font-semibold text-2xl text-ellipsis"
                         >
                           {char === " " ? "\u00A0" : char}
                         </motion.p>
                       ))}
                     </motion.div>
                   </AnimatePresence>
-
                   <AnimatePresence initial={minimized}>
                     {minimized && (
                       <motion.p
@@ -165,7 +168,7 @@ export const Player = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.35, duration: 0.2 }}
-                        className="text-slate-300 font-semibold text-sm"
+                        className="text-slate-300 font-semibold text-xs"
                       >
                         Meteora • 2:42
                       </motion.p>
@@ -173,10 +176,13 @@ export const Player = () => {
                   </AnimatePresence>
                 </div>
                 <div className="flex justify-between items-center gap-2">
-                  <BackwardIcon
-                    className="text-white size-9"
+                  <motion.button
+                    whileHover={{ scale: 1.1, transition: { duration: 0.1 } }}
+                    className="text-white cursor-pointer"
                     onClick={selectPreviousSong}
-                  />
+                  >
+                    <RewindIcon className="size-8" weight="fill" />
+                  </motion.button>
                   <AnimatePresence mode="wait">
                     {isPlaying ? (
                       <motion.button
@@ -211,21 +217,15 @@ export const Player = () => {
                       </motion.button>
                     )}
                   </AnimatePresence>
-                  {/* {isPlaying ? (
-                    <PauseIcon onClick={pauseAudio} />
-                  ) : (
-                    <PlayIcon
-                      onClick={playAudio}
-                      className="text-white size-10"
-                    />
-                  )} */}
-                  <ForwardIcon
-                    className="text-white size-9"
+                  <motion.button
+                    whileHover={{ scale: 1.1, transition: { duration: 0.1 } }}
+                    className="text-white cursor-pointer"
                     onClick={selectNextSong}
-                  />
+                  >
+                    <FastForwardIcon className="size-8" weight="fill" />
+                  </motion.button>
                 </div>
               </section>
-              {/* <input className="w-full" type="range" /> */}
             </div>
           </div>
         </motion.section>
