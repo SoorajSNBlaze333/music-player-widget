@@ -3,12 +3,12 @@ import { useRef, useState } from "react";
 import { useApp } from "../hooks/use-app";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { ArrowsPointingOutIcon } from "@heroicons/react/24/outline";
-import {
-  FastForwardIcon,
-  PauseIcon,
-  PlayIcon,
-  RewindIcon,
-} from "@phosphor-icons/react";
+import { AlbumForward } from "./album-forward";
+import { AlbumBackward } from "./album-backward";
+import { PlayPauseButton } from "./play-pause-button";
+import { SongsListBig } from "./songs-list-big";
+import { formatTime } from "../utils";
+import { AlbumCoverLarge } from "./album-cover-large";
 
 const container = {
   hidden: { opacity: 0 },
@@ -31,14 +31,15 @@ export const Player = () => {
   const [minimized, setMinimized] = useState(true);
   const sectionRef = useRef(null);
   const {
-    isPlaying,
+    band,
+    album,
     playAudio,
     pauseAudio,
-    songs,
+    selectSong,
     selectNextSong,
     selectPreviousSong,
-    currentSongIndex,
   } = useApp();
+  const { isPlaying, albumCover, songs, currentSongIndex } = album;
 
   return (
     <AnimatePresence initial={!minimized}>
@@ -49,7 +50,7 @@ export const Player = () => {
           animate={{ width: 400, height: 650 }}
           exit={{ width: 500, height: 120 }}
           transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-          className="relative rounded-lg overflow-hidden border-[1px] border-slate-300 h-[650px] w-[400px] flex flex-col justify-start items-center"
+          className="relative rounded-lg overflow-hidden border-2 border-slate-900 h-[650px] w-[400px] flex flex-col justify-start items-center bg-black"
         >
           <div className="h-[300px] w-full bg-black relative">
             <AnimatePresence initial={!minimized}>
@@ -62,53 +63,28 @@ export const Player = () => {
                 </motion.button>
               )}
             </AnimatePresence>
-            <AnimatePresence initial={!minimized}>
-              {!minimized && (
-                <motion.div
-                  key="loader"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: 0.5,
-                  }}
-                  className="w-full h-[300px] bg-[url(/background.jpg)] bg-center bg-cover"
-                >
-                  <div className="w-full h-full flex flex-col justify-end items-center bg-linear-to-b from-transparent to-black/90"></div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="absolute left-0 top-0 w-full h-full flex flex-col justify-end items-center">
-              <div className="p-4 w-full">
-                <p className="text-white font-bold text-4xl">Meteora</p>
-                <p className="text-slate-300 font-semibold text-sm">
-                  Linkin Park • 2003
-                </p>
-              </div>
-            </div>
+            <AlbumCoverLarge band={band} album={album} minimized={minimized} />
           </div>
 
           <motion.section
-            className="w-full h-[500px] bg-white overflow-scroll flex flex-col justify-start items-center"
+            className="w-full h-[500px] bg-black overflow-scroll flex flex-col justify-start items-center"
             ref={sectionRef}
           >
-            {songs.map((song, index) => (
-              <div
-                key={index}
-                className="p-3 w-full border-b-[1px] text-sm border-slate-300 text-slate-600 text-left"
-              >
-                {song}
+            <SongsListBig
+              songs={songs}
+              currentSongIndex={currentSongIndex}
+              selectSong={selectSong}
+            />
+            <div className="absolute w-full bottom-0 h-[75px] p-2 flex justify-center items-center text-slate-500">
+              <div className="flex justify-center items-center gap-2 w-full h-full">
+                <AlbumBackward onClick={selectPreviousSong} />
+                <PlayPauseButton
+                  isPlaying={isPlaying}
+                  onPause={pauseAudio}
+                  onPlay={playAudio}
+                />
+                <AlbumForward onClick={selectNextSong} />
               </div>
-            ))}
-
-            <motion.div
-              drag="x"
-              dragMomentum={false}
-              dragConstraints={sectionRef}
-              className="absolute h-2 w-2 bg-slate-500 rounded-full bottom-[70px] z-50 cursor-pointer"
-            ></motion.div>
-            <div className="absolute w-full bottom-0 h-[75px] border-t-[1px] border-slate-300 flex justify-center items-center text-xs text-slate-500">
-              This is the playing zone
             </div>
           </motion.section>
         </motion.section>
@@ -121,7 +97,9 @@ export const Player = () => {
           transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
           className="rounded-xl overflow-hidden relative flex justify-center items-center h-[120px] w-[500px]"
         >
-          <div className="h-full relative flex flex-col justify-center items-center w-full bg-[url(/background.jpg)] bg-center bg-cover">
+          <div
+            className={`h-full relative flex flex-col justify-center items-center w-full bg-[url(${albumCover})] bg-center bg-cover`}
+          >
             <div className="h-full relative w-full flex flex-col p-6 px-8 justify-center items-center gap-4 bg-gradient-to-r from-black via-transparent to-black backdrop-blur-[2px]">
               <AnimatePresence initial={minimized}>
                 {minimized && (
@@ -143,22 +121,24 @@ export const Player = () => {
                   <AnimatePresence custom={currentSongIndex} mode="wait">
                     <motion.div
                       custom={currentSongIndex}
-                      key={`song-name-${songs[currentSongIndex]}`}
+                      key={`song-name-${songs[currentSongIndex].title}`}
                       variants={container}
                       initial="hidden"
                       animate="show"
                       exit="hidden"
                       className="flex justify-start items-center overflow-hidden w-full truncate"
                     >
-                      {songs[currentSongIndex].split("").map((char, index) => (
-                        <motion.p
-                          key={`${char}-${index}`}
-                          variants={item}
-                          className="text-white font-semibold text-2xl text-ellipsis"
-                        >
-                          {char === " " ? "\u00A0" : char}
-                        </motion.p>
-                      ))}
+                      {songs[currentSongIndex].title
+                        .split("")
+                        .map((char, index) => (
+                          <motion.p
+                            key={`${char}-${index}`}
+                            variants={item}
+                            className="text-white font-semibold text-2xl text-ellipsis"
+                          >
+                            {char === " " ? "\u00A0" : char}
+                          </motion.p>
+                        ))}
                     </motion.div>
                   </AnimatePresence>
                   <AnimatePresence initial={minimized}>
@@ -170,60 +150,20 @@ export const Player = () => {
                         transition={{ delay: 0.35, duration: 0.2 }}
                         className="text-slate-300 font-semibold text-xs"
                       >
-                        Meteora • 2:42
+                        {songs[currentSongIndex].album} •{" "}
+                        {formatTime(songs[currentSongIndex].duration)}
                       </motion.p>
                     )}
                   </AnimatePresence>
                 </div>
                 <div className="flex justify-between items-center gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1, transition: { duration: 0.1 } }}
-                    className="text-white cursor-pointer"
-                    onClick={selectPreviousSong}
-                  >
-                    <RewindIcon className="size-8" weight="fill" />
-                  </motion.button>
-                  <AnimatePresence mode="wait">
-                    {isPlaying ? (
-                      <motion.button
-                        key="pause"
-                        initial={{ scale: 0.5 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0.5 }}
-                        transition={{
-                          duration: 0.08,
-                        }}
-                        onClick={pauseAudio}
-                        className="cursor-pointer inline-flex justify-center items-center w-16"
-                      >
-                        <PauseIcon
-                          className="text-white size-8"
-                          weight="fill"
-                        />
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        key="play"
-                        initial={{ scale: 0.5 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0.5 }}
-                        transition={{
-                          duration: 0.08,
-                        }}
-                        onClick={playAudio}
-                        className="cursor-pointer inline-flex justify-center items-center w-16"
-                      >
-                        <PlayIcon className="text-white size-8" weight="fill" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                  <motion.button
-                    whileHover={{ scale: 1.1, transition: { duration: 0.1 } }}
-                    className="text-white cursor-pointer"
-                    onClick={selectNextSong}
-                  >
-                    <FastForwardIcon className="size-8" weight="fill" />
-                  </motion.button>
+                  <AlbumBackward onClick={selectPreviousSong} />
+                  <PlayPauseButton
+                    isPlaying={isPlaying}
+                    onPause={pauseAudio}
+                    onPlay={playAudio}
+                  />
+                  <AlbumForward onClick={selectNextSong} />
                 </div>
               </section>
             </div>

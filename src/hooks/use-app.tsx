@@ -9,71 +9,110 @@ export type Song = {
   title: string;
   duration: number;
   album: string;
-  albumArt?: string;
+  songArt?: string;
 };
 
-type MusicState = {
+export type Album = {
+  released: number;
   isPlaying: boolean;
-  songs: string[];
+  title: string;
+  albumCover: string;
   currentSongIndex: number;
+  songs: Song[];
 };
 
-type MusicStateAndHandlers = MusicState & {
+export type Music = {
+  band: string;
+  album: Album;
+};
+
+type MusicStateAndHandlers = Music & {
   pauseAudio: () => void;
   playAudio: () => void;
   selectNextSong: () => void;
   selectPreviousSong: () => void;
+  selectSong: (index: number) => void;
 };
 
 const AppContext = createContext<MusicStateAndHandlers | undefined>(undefined);
 
-export const AppContextProvider = ({ children }: PropsWithChildren) => {
-  const [musicState, setMusicState] = useState<MusicState>({
-    isPlaying: false,
-    songs: ["Faint", "Breaking the Habit", "Numb"],
-    currentSongIndex: 0,
+export const AppContextProvider = ({
+  children,
+  data,
+}: PropsWithChildren<{
+  data: {
+    band: string;
+    album: {
+      title: string;
+      released: number;
+      albumCover: string;
+      songs: Song[];
+    };
+  };
+}>) => {
+  const [musicState, setMusicState] = useState<Music>({
+    band: data.band,
+    album: {
+      isPlaying: false,
+      released: data.album.released,
+      title: data.album.title,
+      albumCover: data.album.albumCover,
+      songs: data.album.songs,
+      currentSongIndex: 0,
+    },
   });
-
-  // useEffect(() => {
-  //   const audio: HTMLAudioElement | null =
-  //     document.querySelector("#audio-player");
-  //   if (audio) {
-  //     if (musicState.isPlaying) {
-  //       audio.play();
-  //     } else {
-  //       audio.pause();
-  //     }
-  //   }
-  // }, [musicState.isPlaying]);
 
   const pauseAudio = () => {
     setMusicState((prev) => ({
       ...prev,
-      isPlaying: false,
+      album: {
+        ...prev.album,
+        isPlaying: false,
+      },
     }));
   };
 
   const playAudio = () => {
     setMusicState((prev) => ({
       ...prev,
-      isPlaying: true,
+      album: {
+        ...prev.album,
+        isPlaying: true,
+      },
+    }));
+  };
+
+  const selectSong = (index: number) => {
+    setMusicState((prev) => ({
+      ...prev,
+      album: {
+        ...prev.album,
+        currentSongIndex: index,
+      },
     }));
   };
 
   const selectNextSong = () => {
     setMusicState((prev) => ({
       ...prev,
-      currentSongIndex: (prev.currentSongIndex + 1) % prev.songs.length,
+      album: {
+        ...prev.album,
+        currentSongIndex:
+          (prev.album.currentSongIndex + 1) % prev.album.songs.length,
+      },
     }));
   };
 
   const selectPreviousSong = () => {
     setMusicState((prev) => ({
       ...prev,
-      currentSongIndex:
-        prev.currentSongIndex - 1 < 0
-          ? prev.songs.length - 1
-          : prev.currentSongIndex - 1,
+      album: {
+        ...prev.album,
+        currentSongIndex:
+          prev.album.currentSongIndex - 1 < 0
+            ? prev.album.songs.length - 1
+            : prev.album.currentSongIndex - 1,
+      },
     }));
   };
 
@@ -83,6 +122,7 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
         ...musicState,
         playAudio,
         pauseAudio,
+        selectSong,
         selectNextSong,
         selectPreviousSong,
       }}
